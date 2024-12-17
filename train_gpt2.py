@@ -277,6 +277,9 @@ class GPT(nn.Module):
         patch_train: bool = False
     ):
         BLOCK_SIZE = 128
+        seq_len = len(inputs)
+        assert seq_len % BLOCK_SIZE == 0
+        total_num_blocks = seq_len // BLOCK_SIZE
 
         assert inputs.ndim == 1
 
@@ -301,7 +304,7 @@ class GPT(nn.Module):
             return num_blocks[None, None].contiguous(), indices[None, None].contiguous()
 
         def create_doc_swc_block_mask(sliding_window_num_blocks: torch.Tensor):
-            kv_idx = block_idx = torch.arange(512, dtype=torch.int32, device="cuda")
+            kv_idx = block_idx = torch.arange(total_num_blocks, dtype=torch.int32, device="cuda")
             q_idx = block_idx[:, None]
             causal_bm = q_idx >= kv_idx
             causal_full_bm = q_idx > kv_idx
